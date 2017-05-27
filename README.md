@@ -1,6 +1,6 @@
-# ? Mandrake
+# Mandrake
 
-?? currently, Mandrake doesn't run on Windows (but ?)
+Currently, Mandrake doesn't run on Windows (but WIP)
 
 ## prerequisites
 
