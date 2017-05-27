@@ -4,7 +4,6 @@ module.exports = {
     return [
         `./templates/${template_name}/newexpress.sh ${app_name}; `
       , `cd ${app_name}; `
-      , `git init; `
       , `ls; `
       , `pwd; `
       , `clever create -t node "${service_name}" --org ${organization} --region ${region} --alias "${service_name}"; `

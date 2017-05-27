@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 mkdir $1
 cd $1
-git init
 
 # .gitignore
 cat > .gitignore << EOF
@@ -64,5 +63,5 @@ app.get('/hi', (req, res) => {
 })
 
 app.listen(port)
-console.log(`🌍 Web Server is started - listening on ${port}`)
+console.log("🌍 Web Server is started - listening on ", port)
 EOF

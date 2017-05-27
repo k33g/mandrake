@@ -56,6 +56,7 @@ function createGitRepositoryAndPushToCleverCloud(app_id, answers) {
   try {
     let cmd = [
         `cd ${answers.application}; `
+      , `git init; `
       , `git add .; `
       , `git commit -m "First 🚀 of ${answers.service}"; `
       , `git remote add clever git+ssh://git@push-par-clevercloud-customers.services.clever-cloud.com/${app_id}.git; `
@@ -77,13 +78,14 @@ function getCleverCloudApplicationConfiguration(answers) {
     let conf = require(
       `${process.cwd()}/${answers.application}/.clever.json`
     ).apps[0]
+    
     return monet.Either.Right(conf)
   } catch(err) {
     return monet.Either.Left(err.message)
   }
 }
 
-function createRawScaler (template, answers) {
+function createBrandNewApp (template, answers) {
   try {
     // call the template commands
     let cmd = require(`${process.cwd()}/templates/${template}/config.js`)
@@ -303,7 +305,7 @@ inquirer.prompt([
           db.put('last_organization', answers.organization, (err) => {})
           db.put('last_app_region', answers.region, (err) => {})
 
-          createRawScaler(template, answers).cata(
+          createBrandNewApp(template, answers).cata(
             err => console.error(`😡 👎`, err),
             res => {
               console.info('🎩 ✨ 😀 👍')
