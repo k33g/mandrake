@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 "use strict";
-require('shelljs/global');
+require('shelljs/global')
 const fs = require('fs')
 const path = require('path')
-const inquirer = require('inquirer');
-const monet = require('monet');
+const inquirer = require('inquirer')
+const monet = require('monet')
+const level = require('level')
 
 
 function getDirectories (srcpath) {
@@ -43,7 +44,8 @@ function createAddon (template, answers) {
     if(res.code !== 0) {
       return monet.Either.Left(res.stderr)
     }
-    return monet.Either.Right(res.stdout)
+    //return monet.Either.Right(res.stdout)
+    return monet.Either.Right(Object.assign({template}, answers))
 
   } catch(err) {
     return monet.Either.Left(err.message)
@@ -113,7 +115,7 @@ function createRawScaler (template, answers) {
 
         return createGitRepositoryAndPushToCleverCloud(app_id, answers).cata(
           err => monet.Either.Left(err),
-          res => monet.Either.Right(res)
+          res => monet.Either.Right(Object.assign({app_id, template}, answers))
         ) // createGitRepositoryAndPushToCleverCloud
       }
     ) // getCleverCloudApplicationConfiguration
@@ -121,12 +123,6 @@ function createRawScaler (template, answers) {
     return monet.Either.Left(err.message)
   }
 }
-
-/*
-console.log("🎩 call from ", process.cwd())
-console.log("🤖", `${__dirname}/templates`)
-console.log("🤖", getDirectories(`${__dirname}/templates`)) // std templates of Gandalf
-*/
 
 /**
  * Display some ASCII Art at startup
@@ -141,7 +137,12 @@ let startUpMessage = `
 console.log(startUpMessage)
 console.log('\n🎩 by @k33g_org for Clever-Cloud\n')
 
-// TODO: here persisting data
+/**
+ * Level section
+ * see https://github.com/Level/level
+ */
+
+let db = level('./mandrakedb')
 
 let templatesList = getDirectories('./templates').cata(
   err => {
@@ -179,40 +180,68 @@ let regionChoice = {
   type: 'list',
   name: 'region',
   message: 'Where do you want to deploy your application?',
-  choices: ['par', 'mtl']
+  choices: ['par', 'mtl'],
+  default: function() {
+    return new Promise((resolve, reject) => {
+        db.get('last_app_region', (err, value) => {
+          //if (err) reject('???')
+          resolve(value)
+        })
+    })
+  }
 }
 
 let addOnRegionChoice = {
   type: 'list',
   name: 'region',
-  message: 'Where do you want to deploy your application?',
-  choices: ['eu', 'us']
+  message: 'Where do you want to deploy your addon?',
+  choices: ['eu', 'us'],
+  default: function() {
+    return new Promise((resolve, reject) => {
+        db.get('last_addon_region', (err, value) => {
+          //if (err) reject('???')
+          resolve(value)
+        })
+    })
+  }
 }
 
 let organizationName = {
   type: 'input',
   name: 'organization',
   message: 'What is your organization name?',
+  default: function() {
+    return new Promise((resolve, reject) => {
+        db.get('last_organization', (err, value) => {
+          //if (err) reject('???')
+          resolve(value)
+        })
+    })
+  }
 }
 
+//TO CHECK IN DB
 let applicationName = {
   type: 'input',
   name: 'application',
   message: 'What is your application name (or project directory name)?',
 }
 
+//TO CHECK IN DB
 let addonName = {
   type: 'input',
   name: 'addon',
   message: 'What is your addon name ?',
 }
 
+//TO CHECK IN DB
 let serviceName = {
   type: 'input',
   name: 'service',
   message: 'What is your service name (the display named in the CC Console)?',
 }
 
+//TO CHECK IN DB
 let domainName = {
   type: 'input',
   name: 'domain',
@@ -230,9 +259,19 @@ inquirer.prompt([
         inquirer.prompt([
           regionChoice, organizationName, applicationName, serviceName, domainName
         ]).then((answers) => {
+
+          db.put('last_organization', answers.organization, (err) => {})
+          db.put('last_app_region', answers.region, (err) => {})
+
           createRawScaler(template, answers).cata(
             err => console.error(`😡 👎`, err),
-            res => console.info('🎩 ✨ 😀 👍')
+            res => {
+              console.info('🎩 ✨ 😀 👍')
+              console.log(res)
+              db.put("app:"+res.application, res, (err) => {})
+              db.put("domain:"+res.domain, true, (err) => {})
+              db.put("service:"+res.service, true, (err) => {})
+            }
           )
         })
         break;
@@ -240,9 +279,18 @@ inquirer.prompt([
         inquirer.prompt([
           addOnRegionChoice, organizationName, addonName
         ]).then((answers) => {
+
+          db.put('last_organization', answers.organization, (err) => {})
+          db.put('last_addon_region', answers.region, (err) => {})
+
+
           createAddon(template, answers).cata(
             err => console.error(`😡 👎`, err),
-            res => console.info('🎩 ✨ 😀 👍')
+            res => {
+              console.info('🎩 ✨ 😀 👍')
+              console.log(res)
+              db.put("addon:"+res.addon, res, (err) => {})
+            }
           )
         })
         break;
