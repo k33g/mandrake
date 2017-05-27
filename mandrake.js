@@ -128,6 +128,10 @@ console.log("🤖", `${__dirname}/templates`)
 console.log("🤖", getDirectories(`${__dirname}/templates`)) // std templates of Gandalf
 */
 
+/**
+ * Display some ASCII Art at startup
+ */
+
 let templatesList = getDirectories('./templates').cata(
   err => {
     console.log("🎩 There is no template in you project")
