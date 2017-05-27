@@ -9,6 +9,7 @@ module.exports = {
       , `clever create -t node "${service_name}" --org ${organization} --region ${region} --alias "${service_name}"; `
       , `clever env set PORT 8080 --alias "${service_name}"; `
       , `clever domain add ${domain_name}.cleverapps.io --alias "${service_name}"; `
+      , `clever scale --flavor pico --alias "${service_name}"; `
       , `clever deploy --alias "${service_name}"; `
     ].join('');
   }
