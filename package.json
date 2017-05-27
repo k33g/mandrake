@@ -1,0 +1,16 @@
+{
+  "name": "mandrake",
+  "version": "1.0.0",
+  "description": "Clever-Cloud Scalers Generator",
+  "bin": {
+    "mandrake": "mandrake.js"
+  },
+  "keywords": [],
+  "author": "@k33g_org on Twitter | @k33g on GitHub",
+  "license": "MIT",
+  "dependencies": {
+    "inquirer": "^3.0.6",
+    "monet": "^0.8.10",
+    "shelljs": "^0.7.7"
+  }
+}
