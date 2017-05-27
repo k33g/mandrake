@@ -38,6 +38,7 @@ function createAddon (template, answers) {
                     answers.addon
                   , answers.organization
                   , answers.region
+                  , inquirer
                 )
     let res = exec(cmd)
     if(res.code !== 0) {
@@ -58,7 +59,7 @@ function createGitRepositoryAndPushToCleverCloud(app_id, answers) {
         `cd ${answers.application}; `
       , `git init; `
       , `git add .; `
-      , `git commit -m "First 🚀 of ${answers.service}"; `
+      , `git commit -m "First 🚀 of ${answers.displayName}"; `
       , `git remote add clever git+ssh://git@push-par-clevercloud-customers.services.clever-cloud.com/${app_id}.git; `
       , `git push clever master`
     ].join('');
@@ -78,24 +79,26 @@ function getCleverCloudApplicationConfiguration(answers) {
     let conf = require(
       `${process.cwd()}/${answers.application}/.clever.json`
     ).apps[0]
-    
+
     return monet.Either.Right(conf)
   } catch(err) {
     return monet.Either.Left(err.message)
   }
 }
 
-function createBrandNewApp (template, answers) {
+function createBrandNewApp (template, answers, promptsAnswers) {
   try {
     // call the template commands
     let cmd = require(`${process.cwd()}/templates/${template}/config.js`)
                 .cmd(
                     template
                   , answers.application
-                  , answers.service
+                  , answers.displayName
                   , answers.domain
                   , answers.organization
                   , answers.region
+                  , promptsAnswers
+                  , __dirname
                 )
 
     let res = exec(cmd)
@@ -238,7 +241,6 @@ let applicationName = {
   }
 }
 
-//TO CHECK IN DB
 let addonName = {
   type: 'input',
   name: 'addon',
@@ -256,17 +258,17 @@ let addonName = {
   }
 }
 
-let serviceName = {
+let displayName = {
   type: 'input',
-  name: 'service',
-  message: 'What is your service name (the display named in the CC Console)?',
+  name: 'displayName',
+  message: 'What is your display name (the display named in the CC Console)?',
   validate: function(input) {
     return new Promise((resolve, reject) => {
-      db.get(`service:${input}`, (err, value) => {
+      db.get(`displayName:${input}`, (err, value) => {
         if (err) { 
-          resolve(true) // if the service name doesn't exist in the database, it's fine 🤗
+          resolve(true) // if the display name doesn't exist in the database, it's fine 🤗
         } else {
-          resolve('😡 This service already exists in the database')
+          resolve('😡 This display name already exists in the database')
         }
       })
     })
@@ -299,22 +301,40 @@ inquirer.prompt([
   switch(template.split("-")[0]) {
       case 'app':
         inquirer.prompt([
-          regionChoice, organizationName, applicationName, serviceName, domainName
+          regionChoice, organizationName, applicationName, displayName, domainName
         ]).then((answers) => {
 
           db.put('last_organization', answers.organization, (err) => {})
           db.put('last_app_region', answers.region, (err) => {})
 
-          createBrandNewApp(template, answers).cata(
-            err => console.error(`😡 👎`, err),
-            res => {
-              console.info('🎩 ✨ 😀 👍')
-              console.log(res)
-              db.put("app:"+res.application, res, (err) => {})
-              db.put("domain:"+res.domain, true, (err) => {})
-              db.put("service:"+res.service, true, (err) => {})
-            }
-          )
+          //Do something more functional
+          let config = require(`${process.cwd()}/templates/${template}/config.js`)
+          if(config.prompts) {
+            inquirer.prompt(config.prompts(db)).then(promptsAnswers => {
+              createBrandNewApp(template, answers, promptsAnswers).cata(
+                err => console.error(`😡 👎`, err),
+                res => {
+                  console.info('🎩 ✨ 😀 👍')
+                  console.log(res)
+                  db.put("app:"+res.application, res, (err) => {})
+                  db.put("domain:"+res.domain, true, (err) => {})
+                  db.put("displayName:"+res.displayName, true, (err) => {})
+                }
+              )
+            })
+          } else {
+            createBrandNewApp(template, answers).cata(
+              err => console.error(`😡 👎`, err),
+              res => {
+                console.info('🎩 ✨ 😀 👍')
+                console.log(res)
+                db.put("app:"+res.application, res, (err) => {})
+                db.put("domain:"+res.domain, true, (err) => {})
+                db.put("displayName:"+res.displayName, true, (err) => {})
+              }
+            )
+          }
+
         })
         break;
       case 'addon':
