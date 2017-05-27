@@ -141,6 +141,7 @@ let startUpMessage = `
 console.log(startUpMessage)
 console.log('\n🎩 by @k33g_org for Clever-Cloud\n')
 
+// TODO: here persisting data
 
 let templatesList = getDirectories('./templates').cata(
   err => {
