@@ -7,10 +7,6 @@ const path = require('path')
 const inquirer = require('inquirer');
 const monet = require('monet');
 
-/* TODO
-- add a command to generate or update templates
-- save informations
-*/
 
 function getDirectories (srcpath) {
   try {
