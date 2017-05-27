@@ -2,8 +2,7 @@
 module.exports = {
   cmd: function(template_name, app_name, service_name, domain_name, organization, region) {
     return [
-        `mkdir ${app_name}; `
-      , `cp ./templates/${template_name}/project/* ./${app_name}; `
+        `./templates/${template_name}/newexpress.sh ${app_name}; `
       , `cd ${app_name}; `
       , `git init; `
       , `ls; `

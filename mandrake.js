@@ -8,7 +8,6 @@ const inquirer = require('inquirer')
 const monet = require('monet')
 const level = require('level')
 
-
 function getDirectories (srcpath) {
   try {
     let directoryList = fs.readdirSync(srcpath)
@@ -34,7 +33,7 @@ function initializeTemplates() {
 function createAddon (template, answers) {
   // call the template commands
   try {
-    let cmd = require(`./templates/${template}/config.js`)
+    let cmd = require(`${process.cwd()}/templates/${template}/config.js`)
                 .cmd(
                     answers.addon
                   , answers.organization
@@ -87,7 +86,7 @@ function getCleverCloudApplicationConfiguration(answers) {
 function createRawScaler (template, answers) {
   try {
     // call the template commands
-    let cmd = require(`./templates/${template}/config.js`)
+    let cmd = require(`${process.cwd()}/templates/${template}/config.js`)
                 .cmd(
                     template
                   , answers.application
@@ -183,10 +182,10 @@ let regionChoice = {
   choices: ['par', 'mtl'],
   default: function() {
     return new Promise((resolve, reject) => {
-        db.get('last_app_region', (err, value) => {
-          //if (err) reject('???')
-          resolve(value)
-        })
+      db.get('last_app_region', (err, value) => {
+        //if (err) reject('???')
+        resolve(value)
+      })
     })
   }
 }
@@ -198,10 +197,10 @@ let addOnRegionChoice = {
   choices: ['eu', 'us'],
   default: function() {
     return new Promise((resolve, reject) => {
-        db.get('last_addon_region', (err, value) => {
-          //if (err) reject('???')
-          resolve(value)
-        })
+      db.get('last_addon_region', (err, value) => {
+        //if (err) reject('???')
+        resolve(value)
+      })
     })
   }
 }
@@ -212,40 +211,81 @@ let organizationName = {
   message: 'What is your organization name?',
   default: function() {
     return new Promise((resolve, reject) => {
-        db.get('last_organization', (err, value) => {
-          //if (err) reject('???')
-          resolve(value)
-        })
+      db.get('last_organization', (err, value) => {
+        //if (err) reject('???')
+        resolve(value)
+      })
     })
   }
 }
 
-//TO CHECK IN DB
 let applicationName = {
   type: 'input',
   name: 'application',
   message: 'What is your application name (or project directory name)?',
+  validate: function(input) {
+    return new Promise((resolve, reject) => {
+      db.get(`app:${input}`, (err, value) => {
+        if (err) { 
+          resolve(true) // if the application name doesn't exist in the database, it's fine 🤗
+        } else {
+          resolve('😡 This application already exists in the database')
+        }
+      })
+    })
+  }
 }
 
 //TO CHECK IN DB
 let addonName = {
   type: 'input',
   name: 'addon',
-  message: 'What is your addon name ?',
+  message: 'What is your addon name?',
+  validate: function(input) {
+    return new Promise((resolve, reject) => {
+      db.get(`addon:${input}`, (err, value) => {
+        if (err) { 
+          resolve(true) // if the addon name doesn't exist in the database, it's fine 🤗
+        } else {
+          resolve('😡 This addon already exists in the database')
+        }
+      })
+    })
+  }
 }
 
-//TO CHECK IN DB
 let serviceName = {
   type: 'input',
   name: 'service',
   message: 'What is your service name (the display named in the CC Console)?',
+  validate: function(input) {
+    return new Promise((resolve, reject) => {
+      db.get(`service:${input}`, (err, value) => {
+        if (err) { 
+          resolve(true) // if the service name doesn't exist in the database, it's fine 🤗
+        } else {
+          resolve('😡 This service already exists in the database')
+        }
+      })
+    })
+  }
 }
 
-//TO CHECK IN DB
 let domainName = {
   type: 'input',
   name: 'domain',
   message: 'What is your domain name (<domain>.cleverapps.io)?',
+  validate: function(input) {
+    return new Promise((resolve, reject) => {
+      db.get(`domain:${input}`, (err, value) => {
+        if (err) { 
+          resolve(true) // if the domain name doesn't exist in the database, it's fine 🤗
+        } else {
+          resolve('😡 This domain already exists in the database')
+        }
+      })
+    })
+  }
 }
 
 inquirer.prompt([

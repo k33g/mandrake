@@ -1,3 +1,44 @@
+#!/usr/bin/env bash
+mkdir $1
+cd $1
+git init
+
+# .gitignore
+cat > .gitignore << EOF
+node_modules/
+npm-debug.log
+.idea/
+.DS_Store
+.clever.json
+EOF
+
+# README.md
+cat > README.md << EOF
+application name: $1
+EOF
+
+# package.json
+cat > package.json << EOF
+{
+  "name": "$1",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "express": "^4.15.3"
+  }
+}
+EOF
+
+# index.js
+cat > index.js << EOF
 const express = require("express");
 const bodyParser = require("body-parser");
 
@@ -24,3 +65,4 @@ app.get('/hi', (req, res) => {
 
 app.listen(port)
 console.log(`🌍 Web Server is started - listening on ${port}`)
+EOF
