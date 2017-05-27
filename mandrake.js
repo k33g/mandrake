@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 "use strict";
-require('shelljs/global');
+require('shelljs/global')
 const fs = require('fs')
 const path = require('path')
-const inquirer = require('inquirer');
-const monet = require('monet');
-
+const inquirer = require('inquirer')
+const monet = require('monet')
+const level = require('level')
 
 function getDirectories (srcpath) {
   try {
@@ -33,7 +33,7 @@ function initializeTemplates() {
 function createAddon (template, answers) {
   // call the template commands
   try {
-    let cmd = require(`./templates/${template}/config.js`)
+    let cmd = require(`${process.cwd()}/templates/${template}/config.js`)
                 .cmd(
                     answers.addon
                   , answers.organization
@@ -43,7 +43,8 @@ function createAddon (template, answers) {
     if(res.code !== 0) {
       return monet.Either.Left(res.stderr)
     }
-    return monet.Either.Right(res.stdout)
+    //return monet.Either.Right(res.stdout)
+    return monet.Either.Right(Object.assign({template}, answers))
 
   } catch(err) {
     return monet.Either.Left(err.message)
@@ -85,7 +86,7 @@ function getCleverCloudApplicationConfiguration(answers) {
 function createRawScaler (template, answers) {
   try {
     // call the template commands
-    let cmd = require(`./templates/${template}/config.js`)
+    let cmd = require(`${process.cwd()}/templates/${template}/config.js`)
                 .cmd(
                     template
                   , answers.application
@@ -113,7 +114,7 @@ function createRawScaler (template, answers) {
 
         return createGitRepositoryAndPushToCleverCloud(app_id, answers).cata(
           err => monet.Either.Left(err),
-          res => monet.Either.Right(res)
+          res => monet.Either.Right(Object.assign({app_id, template}, answers))
         ) // createGitRepositoryAndPushToCleverCloud
       }
     ) // getCleverCloudApplicationConfiguration
@@ -121,12 +122,6 @@ function createRawScaler (template, answers) {
     return monet.Either.Left(err.message)
   }
 }
-
-/*
-console.log("🎩 call from ", process.cwd())
-console.log("🤖", `${__dirname}/templates`)
-console.log("🤖", getDirectories(`${__dirname}/templates`)) // std templates of Gandalf
-*/
 
 /**
  * Display some ASCII Art at startup
@@ -141,6 +136,12 @@ let startUpMessage = `
 console.log(startUpMessage)
 console.log('\n🎩 by @k33g_org for Clever-Cloud\n')
 
+/**
+ * Level section
+ * see https://github.com/Level/level
+ */
+
+let db = level('./mandrakedb')
 
 let templatesList = getDirectories('./templates').cata(
   err => {
@@ -178,44 +179,113 @@ let regionChoice = {
   type: 'list',
   name: 'region',
   message: 'Where do you want to deploy your application?',
-  choices: ['par', 'mtl']
+  choices: ['par', 'mtl'],
+  default: function() {
+    return new Promise((resolve, reject) => {
+      db.get('last_app_region', (err, value) => {
+        //if (err) reject('???')
+        resolve(value)
+      })
+    })
+  }
 }
 
 let addOnRegionChoice = {
   type: 'list',
   name: 'region',
-  message: 'Where do you want to deploy your application?',
-  choices: ['eu', 'us']
+  message: 'Where do you want to deploy your addon?',
+  choices: ['eu', 'us'],
+  default: function() {
+    return new Promise((resolve, reject) => {
+      db.get('last_addon_region', (err, value) => {
+        //if (err) reject('???')
+        resolve(value)
+      })
+    })
+  }
 }
 
 let organizationName = {
   type: 'input',
   name: 'organization',
   message: 'What is your organization name?',
+  default: function() {
+    return new Promise((resolve, reject) => {
+      db.get('last_organization', (err, value) => {
+        //if (err) reject('???')
+        resolve(value)
+      })
+    })
+  }
 }
 
 let applicationName = {
   type: 'input',
   name: 'application',
   message: 'What is your application name (or project directory name)?',
+  validate: function(input) {
+    return new Promise((resolve, reject) => {
+      db.get(`app:${input}`, (err, value) => {
+        if (err) { 
+          resolve(true) // if the application name doesn't exist in the database, it's fine 🤗
+        } else {
+          resolve('😡 This application already exists in the database')
+        }
+      })
+    })
+  }
 }
 
+//TO CHECK IN DB
 let addonName = {
   type: 'input',
   name: 'addon',
-  message: 'What is your addon name ?',
+  message: 'What is your addon name?',
+  validate: function(input) {
+    return new Promise((resolve, reject) => {
+      db.get(`addon:${input}`, (err, value) => {
+        if (err) { 
+          resolve(true) // if the addon name doesn't exist in the database, it's fine 🤗
+        } else {
+          resolve('😡 This addon already exists in the database')
+        }
+      })
+    })
+  }
 }
 
 let serviceName = {
   type: 'input',
   name: 'service',
   message: 'What is your service name (the display named in the CC Console)?',
+  validate: function(input) {
+    return new Promise((resolve, reject) => {
+      db.get(`service:${input}`, (err, value) => {
+        if (err) { 
+          resolve(true) // if the service name doesn't exist in the database, it's fine 🤗
+        } else {
+          resolve('😡 This service already exists in the database')
+        }
+      })
+    })
+  }
 }
 
 let domainName = {
   type: 'input',
   name: 'domain',
   message: 'What is your domain name (<domain>.cleverapps.io)?',
+  validate: function(input) {
+    return new Promise((resolve, reject) => {
+      db.get(`domain:${input}`, (err, value) => {
+        if (err) { 
+          resolve(true) // if the domain name doesn't exist in the database, it's fine 🤗
+        } else {
+          resolve('😡 This domain already exists in the database')
+        }
+      })
+    })
+  }
 }
 
 inquirer.prompt([
@@ -229,9 +299,19 @@ inquirer.prompt([
         inquirer.prompt([
           regionChoice, organizationName, applicationName, serviceName, domainName
         ]).then((answers) => {
+
+          db.put('last_organization', answers.organization, (err) => {})
+          db.put('last_app_region', answers.region, (err) => {})
+
           createRawScaler(template, answers).cata(
             err => console.error(`😡 👎`, err),
-            res => console.info('🎩 ✨ 😀 👍')
+            res => {
+              console.info('🎩 ✨ 😀 👍')
+              console.log(res)
+              db.put("app:"+res.application, res, (err) => {})
+              db.put("domain:"+res.domain, true, (err) => {})
+              db.put("service:"+res.service, true, (err) => {})
+            }
           )
         })
         break;
@@ -239,9 +319,18 @@ inquirer.prompt([
         inquirer.prompt([
           addOnRegionChoice, organizationName, addonName
         ]).then((answers) => {
+
+          db.put('last_organization', answers.organization, (err) => {})
+          db.put('last_addon_region', answers.region, (err) => {})
+
+
           createAddon(template, answers).cata(
             err => console.error(`😡 👎`, err),
-            res => console.info('🎩 ✨ 😀 👍')
+            res => {
+              console.info('🎩 ✨ 😀 👍')
+              console.log(res)
+              db.put("addon:"+res.addon, res, (err) => {})
+            }
           )
         })
         break;

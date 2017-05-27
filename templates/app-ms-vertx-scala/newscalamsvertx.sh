@@ -42,6 +42,7 @@ EOF
 cat > .gitignore << EOF
 .idea/
 .vertx/
+.clever.json
 /out/
 *.class
 *.log

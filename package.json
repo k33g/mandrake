@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "inquirer": "^3.0.6",
+    "level": "^1.7.0",
     "monet": "^0.8.10",
     "shelljs": "^0.7.7"
   }
