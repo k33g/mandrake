@@ -146,7 +146,7 @@ let db = level('./mandrakedb')
 let templatesList = getDirectories('./templates').cata(
   err => {
     console.log("🎩 There is no template in you project")
-    console.log("🎩 Copying the templates ...\n")
+    console.log("🎩 Copying the templates ...")
 
     return initializeTemplates().cata(
       err => {
@@ -156,7 +156,7 @@ let templatesList = getDirectories('./templates').cata(
         return getDirectories(`${__dirname}/templates`).cata(
           err => { throw new Error("😡 Houston? We have a problem [getting the default templates list]") },
           templatesList => {
-            console.log("🎩 ✨ Templates list generated❗️")
+            console.log("🎩 ✨ Templates list generated❗️\n")
             return templatesList
           }
         )
