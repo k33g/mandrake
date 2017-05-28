@@ -117,7 +117,7 @@ object $2 {
               context
                 .response()
                 .putHeader("content-type", "application/json;charset=UTF-8")
-                .end(new JsonObject().put("error", "cause").encodePrettily())
+                .end(new JsonObject().put("error", cause).encodePrettily())
             }
           }
 
@@ -138,7 +138,7 @@ object $2 {
               context
                 .response()
                 .putHeader("content-type", "application/json;charset=UTF-8")
-                .end(new JsonObject().put("error", "cause").encodePrettily())
+                .end(new JsonObject().put("error", cause).encodePrettily())
             }
           }
         })
