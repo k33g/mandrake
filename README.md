@@ -35,6 +35,8 @@ I'm going to create:
 - a Vert.x microservice
 - a Vert.x web application to call the microservice
 
+#### Initialization
+
 So, first, create a directory (and go inside), and launch **mandrake**:
 
 ```shell
@@ -44,14 +46,32 @@ mandrake
 ```
 
 The first time you run **mandrake** in an empty directory, **mandrake** copies the default templates in the current directory...
+
 ![01](documentation/01.png)
 
 ... And **mandrake** creates a small database to keep project informations
+
 ![02](documentation/02.png)
 
+#### Redis Addon
 
+Select the `addon-redis-small` (**mandrake** will create and deploy a "small" redis database on Clever-Cloud)
 
-> WIP
+![03](documentation/03.png)
+
+Explain:
+- where you want to deploy the redis database
+- type the name of your organization on Clever-Cloud
+- give a name to your addon and type `enter`
+
+![04](documentation/04.png)
+
+#### Microservice application
+
+Run **mandrake** again, and choose the `app-discoverable-ms-vertx-scala-m` item (**mandrake** will create and deploy a scala application on an sized "M" instance on Clever-Cloud)
+
+![05](documentation/05.png =1011x556)
+
 
 ## Create a template
 
