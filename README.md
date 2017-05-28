@@ -70,7 +70,7 @@ Explain:
 
 Run **mandrake** again, and choose the `app-discoverable-ms-vertx-scala-m` item (**mandrake** will create and deploy a scala application on an sized "M" instance on Clever-Cloud)
 
-<img src="/documentation/05.png" alt="05" style="width: 50%; height: 50%;"/>
+<img src="documentation/05.png" alt="05" style="width: 50%; height: 50%;"/>
 
 
 
