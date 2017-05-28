@@ -1,3 +1,4 @@
+// very simple Vert-x web appplication to use a discoverable microservice written in Scala
 module.exports = {
   prompts: function(db) {
     let objectNameInput = {
@@ -17,22 +18,24 @@ module.exports = {
     }
     return [objectNameInput, microServiceIdInput, redisAddOnNameInput]
   },
-  cmd: function(template_name, app_name, display_name, domain_name, organization, region, answers) {
+  cmd: function({
+    template, application, displayName, domain, organization, region, promptsAnswers
+  }) {
 
-    let object_name = answers.object
-    let microservice_id = answers.microserviceId
-    let redis_addon_name = answers.redisAddOnName
+    let object_name = promptsAnswers.object
+    let microservice_id = promptsAnswers.microserviceId
+    let redis_addon_name = promptsAnswers.redisAddOnName
 
 
     return [
-        `./templates/${template_name}/newscalamsvertx.sh ${app_name} ${object_name} ${microservice_id}; `
-      , `cd ${app_name}; `
-      , `clever create -t sbt "${display_name}" --org ${organization} --region ${region} --alias "${display_name}"; `
-      , `clever env set PORT 8080 --alias "${display_name}"; `
-      , `clever domain add ${domain_name}.cleverapps.io --alias "${display_name}"; `
-      , `clever scale --flavor M --alias "${display_name}"; `
-      , `clever service link-addon ${redis_addon_name} --alias "${display_name}"; `
-      , `clever deploy --alias "${display_name}"; `
+        `./templates/${template}/newscalamsvertx.sh ${application} ${object_name} ${microservice_id}; `
+      , `cd ${application}; `
+      , `clever create -t sbt "${displayName}" --org ${organization} --region ${region} --alias "${displayName}"; `
+      , `clever env set PORT 8080 --alias "${displayName}"; `
+      , `clever domain add ${domain}.cleverapps.io --alias "${displayName}"; `
+      , `clever scale --flavor M --alias "${displayName}"; `
+      , `clever service link-addon ${redis_addon_name} --alias "${displayName}"; `
+      , `clever deploy --alias "${displayName}"; `
     ].join('');
 
 

@@ -31,6 +31,18 @@ You have to install the Clever-Cloud CLI: https://www.clever-cloud.com/doc/cleve
 
 > WIP
 
+### Application template
+
+>> WIP
+
+### Addon template
+
+>> WIP
+
+### Command template
+
+>> WIP
+
 ## Roadmap
 
 > WIP
