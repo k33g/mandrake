@@ -1,4 +1,4 @@
-# ? Mandrake
+# Mandrake
 
 Mandrake is an application generator for Clever-Cloud:
 
