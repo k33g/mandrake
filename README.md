@@ -44,10 +44,10 @@ mandrake
 ```
 
 The first time you run **mandrake** in an empty directory, **mandrake** copies the default templates in the current directory...
-![01](/documentation/01.png)
+![01](documentation/01.png)
 
 ... And **mandrake** creates a small database to keep project informations
-![02](/documentation/02.png)
+![02](documentation/02.png)
 
 
 
