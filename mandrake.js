@@ -309,6 +309,8 @@ inquirer.prompt([
 
           //Do something more functional
           let config = require(`${process.cwd()}/templates/${template}/config.js`)
+
+          //TODO: ask for GitHub or Brand new application project
           if(config.prompts) {
             inquirer.prompt(config.prompts(db)).then(promptsAnswers => {
               createBrandNewApp(template, answers, promptsAnswers).cata(
@@ -345,7 +347,6 @@ inquirer.prompt([
           db.put('last_organization', answers.organization, (err) => {})
           db.put('last_addon_region', answers.region, (err) => {})
 
-
           createAddon(template, answers).cata(
             err => console.error(`😡 👎`, err),
             res => {
@@ -362,7 +363,3 @@ inquirer.prompt([
 
 }) // end of inquirer.prompt
 
-// $ clever addon create postgresql-addon my-addon-pg --plan dev --region mtl
-// clever addon create redis-addon redis000 --plan s
-// clever service link-addon redis000 --alias 🐱-micro-service-005
-// à faire sur une organisation
