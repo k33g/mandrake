@@ -30,7 +30,7 @@ function initializeTemplates() {
   }
 }
 
-function createAddon (template, answers) {
+function createAddon (template, db, answers) {
   // call the template commands
   try {
     let cmd = require(`${process.cwd()}/templates/${template}/config.js`)
@@ -38,7 +38,8 @@ function createAddon (template, answers) {
                     answers.addon
                   , answers.organization
                   , answers.region
-                  , inquirer
+                  , db
+                  , __dirname
                 )
     let res = exec(cmd)
     if(res.code !== 0) {
@@ -86,20 +87,39 @@ function getCleverCloudApplicationConfiguration(answers) {
   }
 }
 
-function createBrandNewApp (template, answers, promptsAnswers) {
+function runCmd (template, db, promptsAnswers) {
   try {
     // call the template commands
     let cmd = require(`${process.cwd()}/templates/${template}/config.js`)
-                .cmd(
-                    template
-                  , answers.application
-                  , answers.displayName
-                  , answers.domain
-                  , answers.organization
-                  , answers.region
-                  , promptsAnswers
-                  , __dirname
-                )
+                .cmd({
+                    template: template
+                  , promptsAnswers: promptsAnswers
+                  , db: db
+                  , mandrakeLocation: __dirname
+                })
+    let res = exec(cmd)
+    if(res.code !== 0) { return monet.Either.Left(res.stderr) }
+    return monet.Either.Right(res.stdout)
+  } catch (error) {
+    return monet.Either.Left(err.message)
+  }
+}
+
+function createBrandNewApp (template, db, answers, promptsAnswers) {
+  try {
+    // call the template commands
+    let cmd = require(`${process.cwd()}/templates/${template}/config.js`)
+                .cmd({
+                    template: template
+                  , application: answers.application
+                  , displayName: answers.displayName
+                  , domain: answers.domain
+                  , organization: answers.organization
+                  , region: answers.region
+                  , promptsAnswers: promptsAnswers
+                  , db: db
+                  , mandrakeLocation: __dirname
+                })
 
     let res = exec(cmd)
 
@@ -313,7 +333,8 @@ inquirer.prompt([
           //TODO: ask for GitHub or Brand new application project
           if(config.prompts) {
             inquirer.prompt(config.prompts(db)).then(promptsAnswers => {
-              createBrandNewApp(template, answers, promptsAnswers).cata(
+              // pass promptsAnswers as parameters to use it cmd
+              createBrandNewApp(template, db, answers, promptsAnswers).cata(
                 err => console.error(`😡 👎`, err),
                 res => {
                   console.info('🎩 ✨ 😀 👍')
@@ -325,7 +346,7 @@ inquirer.prompt([
               )
             })
           } else {
-            createBrandNewApp(template, answers).cata(
+            createBrandNewApp(template, db, answers).cata(
               err => console.error(`😡 👎`, err),
               res => {
                 console.info('🎩 ✨ 😀 👍')
@@ -347,7 +368,7 @@ inquirer.prompt([
           db.put('last_organization', answers.organization, (err) => {})
           db.put('last_addon_region', answers.region, (err) => {})
 
-          createAddon(template, answers).cata(
+          createAddon(template, db, answers).cata(
             err => console.error(`😡 👎`, err),
             res => {
               console.info('🎩 ✨ 😀 👍')
@@ -356,6 +377,31 @@ inquirer.prompt([
             }
           )
         })
+        break;
+      case 'cmd':
+          //Do something more functional
+          let config = require(`${process.cwd()}/templates/${template}/config.js`)
+          
+          if(config.prompts) {
+            inquirer.prompt(config.prompts(db)).then(promptsAnswers => {
+              runCmd(template, db, promptsAnswers).cata(
+                err => console.error(`😡 👎`, err),
+                res => {
+                  console.info('🎩 ✨ 😀 👍')
+                  console.log(res)
+                }
+              )
+            })
+          } else {
+            runCmd(template, db).cata(
+              err => console.error(`😡 👎`, err),
+              res => {
+                console.info('🎩 ✨ 😀 👍')
+                console.log(res)
+              }
+            )
+          }
+
         break;
       default:
         //TODO

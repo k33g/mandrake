@@ -1,16 +1,18 @@
-
+// very simple Express web application
 module.exports = {
-  cmd: function(template_name, app_name, display_name, domain_name, organization, region) {
+  cmd: function({
+    template, application, displayName, domain, organization, region
+    }) {
     return [
-        `./templates/${template_name}/newexpress.sh ${app_name}; `
-      , `cd ${app_name}; `
+        `./templates/${template}/newexpress.sh ${application}; `
+      , `cd ${application}; `
       , `ls; `
       , `pwd; `
-      , `clever create -t node "${display_name}" --org ${organization} --region ${region} --alias "${display_name}"; `
-      , `clever env set PORT 8080 --alias "${display_name}"; `
-      , `clever domain add ${domain_name}.cleverapps.io --alias "${display_name}"; `
-      , `clever scale --flavor pico --alias "${display_name}"; `
-      , `clever deploy --alias "${display_name}"; `
+      , `clever create -t node "${displayName}" --org ${organization} --region ${region} --alias "${displayName}"; `
+      , `clever env set PORT 8080 --alias "${displayName}"; `
+      , `clever domain add ${domain}.cleverapps.io --alias "${displayName}"; `
+      , `clever scale --flavor pico --alias "${displayName}"; `
+      , `clever deploy --alias "${displayName}"; `
     ].join('');
   }
 }
