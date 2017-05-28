@@ -1,4 +1,4 @@
-# 🎩 Mandrake
+# ? Mandrake
 
 Mandrake is an application generator for Clever-Cloud:
 
@@ -34,4 +34,3 @@ You have to install the Clever-Cloud CLI: https://www.clever-cloud.com/doc/cleve
 ## Roadmap
 
 > WIP
-
