@@ -2,31 +2,24 @@
 
 "use strict";
 require('shelljs/global')
-//const fs = require('fs')
-//const path = require('path')
+
 const inquirer = require('inquirer')
 const monet = require('monet')
 const level = require('level')
 
-const getDirectories = require('./core/fsTools').getDirectories;
-const initializeTemplates = require('./core/templates').initializeTemplates;
+const getTemplateConfig = require('./core/templates').getTemplateConfig;
+const isItThefistTime = require('./core/templates').isItThefistTime;
+const buildTemplatesTitlesList = require('./core/templates').buildTemplatesTitlesList;
+const getTemplatesTable = require('./core/templates').getTemplatesTable;
 
 const createBrandNewApp = require('./core/applications').createBrandNewApp;
 const createAddon = require('./core/addons').createAddon;
 const runCmd = require('./core/commands').runCmd;
 
-/**
- * Display some ASCII Art at startup
- */
+const logo = require('./core/logo');
 
-let startUpMessage = `                                
- _____           _         _       
-|     |___ ___ _| |___ ___| |_ ___ 
-| | | | .'|   | . |  _| .'| '_| -_|
-|_|_|_|__,|_|_|___|_| |__,|_,_|___|`;
 
-console.log(startUpMessage)
-console.log('\n🎩 by @k33g_org for Clever-Cloud\n')
+isItThefistTime()
 
 /**
  * Level section
@@ -37,39 +30,12 @@ console.log('\n🎩 by @k33g_org for Clever-Cloud\n')
 
 let db = level('./mandrakedb')
 
-let templatesList = getDirectories({srcpath: './templates'}).cata(
-  err => {
-    console.log("🎩 There is no template in you project")
-    console.log("🎩 Copying the templates ...")
-
-    return initializeTemplates().cata(
-      err => {
-        throw new Error("😡 Houston? We have a problem [initializing the templates list]")
-      },
-      code => {
-        return getDirectories({srcpath: `${__dirname}/templates`}).cata(
-          err => { 
-            //console.log(err)
-            throw new Error("😡 Houston? We have a problem [getting the default templates list]") 
-          },
-          templatesList => {
-            console.log("🎩 ✨ Templates list generated❗️\n")
-            return templatesList
-          }
-        )
-      }
-    )
-  },
-  templatesList => {
-    return templatesList
-  }
-)
 
 let templatesChoice = {
   type: 'list',
-  name: 'template',
+  name: 'templateTitle',
   message: 'What kind of application do yo want to generate?',
-  choices: templatesList
+  choices: buildTemplatesTitlesList
 }
 
 let regionChoice = {
@@ -188,7 +154,12 @@ inquirer.prompt([
   templatesChoice
 ]).then((answers) => {
 
-  let template = answers.template
+  //let template = answers.template
+  // search templane directory name by title 
+  let template = getTemplatesTable().find(item => item.title == answers.templateTitle).template
+  
+  // Do something more functional
+  if(template==null) { throw Error("🐞") }
 
   switch(template.split("-")[0]) {
       case 'app':
@@ -199,36 +170,43 @@ inquirer.prompt([
           db.put('last_organization', answers.organization, (err) => {})
           db.put('last_app_region', answers.region, (err) => {})
 
-          //Do something more functional
-          let config = require(`${process.cwd()}/templates/${template}/config.js`)
+          //let config = require(`${process.cwd()}/templates/${template}/config.js`)
 
-          //TODO: ask for GitHub or Brand new application project
-          if(config.prompts) {
-            inquirer.prompt(config.prompts(db)).then(promptsAnswers => {
-              // pass promptsAnswers as parameters to use it cmd
-              createBrandNewApp({template, db, answers, promptsAnswers}).cata(
-                err => console.error(`😡 👎`, err),
-                res => {
-                  console.info('🎩 ✨ 😀 👍')
-                  console.log(res)
-                  db.put("app:"+res.application, res, (err) => {})
-                  db.put("domain:"+res.domain, true, (err) => {})
-                  db.put("displayName:"+res.displayName, true, (err) => {})
-                }
-              )
-            })
-          } else {
-            createBrandNewApp({template, db, answers, promptsAnswers: null}).cata(
-              err => console.error(`😡 👎`, err),
-              res => {
-                console.info('🎩 ✨ 😀 👍')
-                console.log(res)
-                db.put("app:"+res.application, res, (err) => {})
-                db.put("domain:"+res.domain, true, (err) => {})
-                db.put("displayName:"+res.displayName, true, (err) => {})
-              }
-            )
-          }
+          getTemplateConfig({template: template}).cata(
+            err => {
+              console.error(`😡 👎`, err)
+              throw new Error("😡 Houston? We have a problem [getTemplateConfig when creating application]")
+            },
+            config => {
+              //TODO: ask for GitHub or Brand new application project
+              if(config.prompts) { // check if the template has "embedded" questions
+                inquirer.prompt(config.prompts(db)).then(promptsAnswers => {
+                  // pass promptsAnswers as parameters to use it cmd
+                  createBrandNewApp({template, db, answers, promptsAnswers}).cata(
+                    err => console.error(`😡 👎`, err),
+                    res => {
+                      console.info('🎩 ✨ 😀 👍')
+                      console.log(res)
+                      db.put("app:"+res.application, res, (err) => {})
+                      db.put("domain:"+res.domain, true, (err) => {})
+                      db.put("displayName:"+res.displayName, true, (err) => {})
+                    }
+                  )
+                }) // end of inquirer.prompt
+              } else {
+                createBrandNewApp({template, db, answers, promptsAnswers: null}).cata(
+                  err => console.error(`😡 👎`, err),
+                  res => {
+                    console.info('🎩 ✨ 😀 👍')
+                    console.log(res)
+                    db.put("app:"+res.application, res, (err) => {})
+                    db.put("domain:"+res.domain, true, (err) => {})
+                    db.put("displayName:"+res.displayName, true, (err) => {})
+                  }
+                )
+              } // end of if
+            } // end of Right(config)
+          ) // end of getTemplateConfig cata 
 
         })
         break;
@@ -251,28 +229,37 @@ inquirer.prompt([
         })
         break;
       case 'cmd':
-          //Do something more functional
-          let config = require(`${process.cwd()}/templates/${template}/config.js`)
-          
-          if(config.prompts) {
-            inquirer.prompt(config.prompts(db)).then(promptsAnswers => {
-              runCmd({template, db, promptsAnswers}).cata(
-                err => console.error(`😡 👎`, err),
-                res => {
-                  console.info('🎩 ✨ 😀 👍')
-                  console.log(res)
-                }
-              )
-            })
-          } else {
-            runCmd({template, db, promptsAnswers: null}).cata(
-              err => console.error(`😡 👎`, err),
-              res => {
-                console.info('🎩 ✨ 😀 👍')
-                console.log(res)
-              }
-            )
-          }
+          //let config = require(`${process.cwd()}/templates/${template}/config.js`)
+
+          getTemplateConfig({template: template}).cata(
+            err => {
+              console.error(`->😡 👎`, err)
+              throw new Error("😡 Houston? We have a problem [getTemplateConfig when running command]")
+            },
+            config => {
+
+              if(config.prompts) { // check if the template has "embedded" questions
+                inquirer.prompt(config.prompts(db)).then(promptsAnswers => {
+                  runCmd({template, db, promptsAnswers}).cata(
+                    err => console.error(`😡 👎`, err),
+                    res => {
+                      console.info('🎩 ✨ 😀 👍')
+                      console.log(res)
+                    }
+                  )
+                })
+              } else {
+                runCmd({template, db, promptsAnswers: null}).cata(
+                  err => console.error(`😡 👎`, err),
+                  res => {
+                    console.info('🎩 ✨ 😀 👍')
+                    console.log(res)
+                  }
+                )
+              } // end of if
+
+            } // end of Right(config)
+          ) // end of getTemplateConfig cata 
 
         break;
       default:

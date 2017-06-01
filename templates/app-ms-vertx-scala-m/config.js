@@ -1,5 +1,6 @@
 // very simple Vert-x microservice written in Scala
 module.exports = {
+  title: "Simple Vert-x microservice written in Scala",
   cmd: function({
     template, application, displayName, domain, organization, region
   }) {
