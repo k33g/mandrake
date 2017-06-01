@@ -2,151 +2,18 @@
 
 "use strict";
 require('shelljs/global')
-const fs = require('fs')
-const path = require('path')
+//const fs = require('fs')
+//const path = require('path')
 const inquirer = require('inquirer')
 const monet = require('monet')
 const level = require('level')
 
-function getDirectories (srcpath) {
-  try {
-    let directoryList = fs.readdirSync(srcpath)
-      .filter(file => fs.lstatSync(path.join(srcpath, file)).isDirectory())
-    return monet.Either.Right(directoryList)
-  } catch(err) {
-    return monet.Either.Left(err.message)
-  }
-}
+const getDirectories = require('./core/fsTools').getDirectories;
+const initializeTemplates = require('./core/templates').initializeTemplates;
 
-function initializeTemplates() {
-  try {
-    let res = exec(`cp -R ${__dirname}/templates ./templates`)
-    if(res.code !== 0) {
-      return monet.Either.Left("😡 Error when copying templates")
-    }
-    return monet.Either.Right(res.code)
-  } catch(err) {
-    return monet.Either.Left(err.message)
-  }
-}
-
-function createAddon (template, db, answers) {
-  // call the template commands
-  try {
-    let cmd = require(`${process.cwd()}/templates/${template}/config.js`)
-                .cmd(
-                    answers.addon
-                  , answers.organization
-                  , answers.region
-                  , db
-                  , __dirname
-                )
-    let res = exec(cmd)
-    if(res.code !== 0) {
-      return monet.Either.Left(res.stderr)
-    }
-    //return monet.Either.Right(res.stdout)
-    return monet.Either.Right(Object.assign({template}, answers))
-
-  } catch(err) {
-    return monet.Either.Left(err.message)
-  }
-
-}
-
-function createGitRepositoryAndPushToCleverCloud(app_id, answers) {
-  try {
-    let cmd = [
-        `cd ${answers.application}; `
-      , `git init; `
-      , `git add .; `
-      , `git commit -m "First 🚀 of ${answers.displayName}"; `
-      , `git remote add clever git+ssh://git@push-par-clevercloud-customers.services.clever-cloud.com/${app_id}.git; `
-      , `git push clever master`
-    ].join('');
-    let res = exec(cmd)
-    if(res.code !== 0) {
-      return monet.Either.Left(res.stderr)
-    }
-    return monet.Either.Right(res.stdout)
-
-  } catch(err) {
-    return monet.Either.Left(err.message)
-  }
-}
-
-function getCleverCloudApplicationConfiguration(answers) {
-  try {
-    let conf = require(
-      `${process.cwd()}/${answers.application}/.clever.json`
-    ).apps[0]
-
-    return monet.Either.Right(conf)
-  } catch(err) {
-    return monet.Either.Left(err.message)
-  }
-}
-
-function runCmd (template, db, promptsAnswers) {
-  try {
-    // call the template commands
-    let cmd = require(`${process.cwd()}/templates/${template}/config.js`)
-                .cmd({
-                    template: template
-                  , promptsAnswers: promptsAnswers
-                  , db: db
-                  , mandrakeLocation: __dirname
-                })
-    let res = exec(cmd)
-    if(res.code !== 0) { return monet.Either.Left(res.stderr) }
-    return monet.Either.Right(res.stdout)
-  } catch (error) {
-    return monet.Either.Left(err.message)
-  }
-}
-
-function createBrandNewApp (template, db, answers, promptsAnswers) {
-  try {
-    // call the template commands
-    let cmd = require(`${process.cwd()}/templates/${template}/config.js`)
-                .cmd({
-                    template: template
-                  , application: answers.application
-                  , displayName: answers.displayName
-                  , domain: answers.domain
-                  , organization: answers.organization
-                  , region: answers.region
-                  , promptsAnswers: promptsAnswers
-                  , db: db
-                  , mandrakeLocation: __dirname
-                })
-
-    let res = exec(cmd)
-
-    if(res.code !== 0) { return monet.Either.Left(res.stderr) }
-    // creation on Clever Cloud is OK
-    // so, get the generated configuration file
-    // create a git repository
-    // push to Clever-Cloud
-    console.info(res.stdout)
-    return getCleverCloudApplicationConfiguration(answers).cata(
-      err => monet.Either.Left(err),
-      conf => {
-        console.log("🎩 Application configuration: ", conf)
-        let app_id = conf.app_id // Clever application Id
-        console.log("🎩 Your Clever Application id is: ", app_id)
-        console.log("🎩 Creating a git repository, then push to 💭 ☁️ ...")
-
-        return createGitRepositoryAndPushToCleverCloud(app_id, answers).cata(
-          err => monet.Either.Left(err),
-          res => monet.Either.Right(Object.assign({app_id, template}, answers))
-        ) // createGitRepositoryAndPushToCleverCloud
-      }
-    ) // getCleverCloudApplicationConfiguration
-  } catch(err) {
-    return monet.Either.Left(err.message)
-  }
-}
+const createBrandNewApp = require('./core/applications').createBrandNewApp;
+const createAddon = require('./core/addons').createAddon;
+const runCmd = require('./core/commands').runCmd;
 
 /**
  * Display some ASCII Art at startup
@@ -164,11 +31,13 @@ console.log('\n🎩 by @k33g_org for Clever-Cloud\n')
 /**
  * Level section
  * see https://github.com/Level/level
+ * Level is used to keep some informations in memory
+ * eg: to propose the last used organization, ...
  */
 
 let db = level('./mandrakedb')
 
-let templatesList = getDirectories('./templates').cata(
+let templatesList = getDirectories({srcpath: './templates'}).cata(
   err => {
     console.log("🎩 There is no template in you project")
     console.log("🎩 Copying the templates ...")
@@ -178,8 +47,11 @@ let templatesList = getDirectories('./templates').cata(
         throw new Error("😡 Houston? We have a problem [initializing the templates list]")
       },
       code => {
-        return getDirectories(`${__dirname}/templates`).cata(
-          err => { throw new Error("😡 Houston? We have a problem [getting the default templates list]") },
+        return getDirectories({srcpath: `${__dirname}/templates`}).cata(
+          err => { 
+            //console.log(err)
+            throw new Error("😡 Houston? We have a problem [getting the default templates list]") 
+          },
           templatesList => {
             console.log("🎩 ✨ Templates list generated❗️\n")
             return templatesList
@@ -334,7 +206,7 @@ inquirer.prompt([
           if(config.prompts) {
             inquirer.prompt(config.prompts(db)).then(promptsAnswers => {
               // pass promptsAnswers as parameters to use it cmd
-              createBrandNewApp(template, db, answers, promptsAnswers).cata(
+              createBrandNewApp({template, db, answers, promptsAnswers}).cata(
                 err => console.error(`😡 👎`, err),
                 res => {
                   console.info('🎩 ✨ 😀 👍')
@@ -346,7 +218,7 @@ inquirer.prompt([
               )
             })
           } else {
-            createBrandNewApp(template, db, answers).cata(
+            createBrandNewApp({template, db, answers, promptsAnswers: null}).cata(
               err => console.error(`😡 👎`, err),
               res => {
                 console.info('🎩 ✨ 😀 👍')
@@ -368,7 +240,7 @@ inquirer.prompt([
           db.put('last_organization', answers.organization, (err) => {})
           db.put('last_addon_region', answers.region, (err) => {})
 
-          createAddon(template, db, answers).cata(
+          createAddon({template, db, answers}).cata(
             err => console.error(`😡 👎`, err),
             res => {
               console.info('🎩 ✨ 😀 👍')
@@ -384,7 +256,7 @@ inquirer.prompt([
           
           if(config.prompts) {
             inquirer.prompt(config.prompts(db)).then(promptsAnswers => {
-              runCmd(template, db, promptsAnswers).cata(
+              runCmd({template, db, promptsAnswers}).cata(
                 err => console.error(`😡 👎`, err),
                 res => {
                   console.info('🎩 ✨ 😀 👍')
@@ -393,7 +265,7 @@ inquirer.prompt([
               )
             })
           } else {
-            runCmd(template, db).cata(
+            runCmd({template, db, promptsAnswers: null}).cata(
               err => console.error(`😡 👎`, err),
               res => {
                 console.info('🎩 ✨ 😀 👍')
