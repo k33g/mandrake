@@ -14,11 +14,13 @@ function runCmd ({template, db, promptsAnswers}) {
                   , db: db
                   , mandrakeLocation: __dirname
                 })
+
     let res = exec(cmd)
+
     if(res.code !== 0) { return monet.Either.Left(res.stderr) }
     return monet.Either.Right(res.stdout)
   } catch (error) {
-    return monet.Either.Left(err.message)
+    return monet.Either.Left(error.message)
   }
 }
 
