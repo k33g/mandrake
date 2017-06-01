@@ -1,0 +1,18 @@
+{
+  "name": "bob",
+  "version": "0.0.0",
+  "private": true,
+  "author": "John Doe",
+  "description": "Bot for Clever Cloud",
+  "dependencies": {
+    "hubot": "^2.19.0",
+    "hubot-diagnostics": "0.0.1",
+    "hubot-help": "^0.2.0",
+    "hubot-rules": "^0.1.1",
+    "hubot-scripts": "^2.17.2",
+    "hubot-slack": "^4.3.4"
+  },
+  "scripts":{
+    "start": "./bin/hubot -a slack"
+  }
+}

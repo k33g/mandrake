@@ -7,8 +7,6 @@ module.exports = {
     return [
         `./templates/${template}/newexpress.sh ${application}; `
       , `cd ${application}; `
-      , `ls; `
-      , `pwd; `
       , `clever create -t node "${displayName}" --org ${organization} --region ${region} --alias "${displayName}"; `
       , `clever env set PORT 8080 --alias "${displayName}"; `
       , `clever domain add ${domain}.cleverapps.io --alias "${displayName}"; `
