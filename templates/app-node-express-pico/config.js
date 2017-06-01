@@ -1,5 +1,6 @@
 // very simple Express web application
 module.exports = {
+  title: "Simple Express web application",
   cmd: function({
     template, application, displayName, domain, organization, region
     }) {

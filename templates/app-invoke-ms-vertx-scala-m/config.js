@@ -1,5 +1,6 @@
 // very simple Vert-x web appplication to use a discoverable microservice written in Scala
 module.exports = {
+  title: "Scala Vert-x web appplication to use a discoverable microservice",
   prompts: function(db) {
     let objectNameInput = {
       type: 'input',
