@@ -11,7 +11,6 @@ module.exports = {
       , `clever env set PORT 8080 --alias "${displayName}"; `
       , `clever domain add ${domain}.cleverapps.io --alias "${displayName}"; `
       , `clever scale --flavor M --alias "${displayName}"; `
-      , `clever deploy --alias "${displayName}"; `
     ].join('');
   }
 }

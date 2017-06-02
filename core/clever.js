@@ -9,7 +9,7 @@ function createGitRepositoryAndPushToCleverCloud({app_id, answers}) {
       , `git add .; `
       , `git commit -m "First 🚀 of ${answers.displayName}"; `
       , `git remote add clever git+ssh://git@push-par-clevercloud-customers.services.clever-cloud.com/${app_id}.git; `
-      , `git push clever master`
+      , `git push clever master;`
     ].join('');
     let res = exec(cmd)
     if(res.code !== 0) {

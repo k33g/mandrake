@@ -26,7 +26,6 @@ module.exports = {
       , `clever env set HUBOT_SLACK_TOKEN ${slackToken} --alias "${displayName}"; `
       , `clever domain add ${domain}.cleverapps.io --alias "${displayName}"; `
       , `clever scale --flavor S --alias "${displayName}"; `
-      , `clever deploy --alias "${displayName}"; `
     ].join('');
 
   }
