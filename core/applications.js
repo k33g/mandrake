@@ -30,7 +30,8 @@ function createBrandNewApp ({template, db, answers, promptsAnswers}) {
     // so, get the generated configuration file
     // create a git repository
     // push to Clever-Cloud
-    console.info(res.stdout)
+    //console.info(res.stdout)
+
     return getCleverCloudApplicationConfiguration({answers}).cata(
       err => monet.Either.Left(err),
       conf => {

@@ -36,7 +36,6 @@ module.exports = {
       , `clever domain add ${domain}.cleverapps.io --alias "${displayName}"; `
       , `clever scale --flavor M --alias "${displayName}"; `
       , `clever service link-addon ${redis_addon_name} --alias "${displayName}"; `
-      , `clever deploy --alias "${displayName}"; `
     ].join('');
 
 
