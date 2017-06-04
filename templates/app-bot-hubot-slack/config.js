@@ -21,9 +21,10 @@ module.exports = {
       , `cp -R ./templates/${template}/bot-skeleton/* ./${application}; `
       , `cd ${application}; `
       , `clever create -t node "${displayName}" --org ${organization} --region ${region} --alias "${displayName}"; `
-      , `clever env set PORT 8080 --alias "${displayName}"; `
-      , `clever env set EXPRESS_PORT 8080 --alias "${displayName}"; `
-      , `clever env set HUBOT_SLACK_TOKEN ${slackToken} --alias "${displayName}"; `
+      //, `clever env set PORT 8080 --alias "${displayName}"; `
+      //, `clever env set EXPRESS_PORT 8080 --alias "${displayName}"; `
+      //, `clever env set HUBOT_SLACK_TOKEN ${slackToken} --alias "${displayName}"; `
+      , `echo "PORT=8080\nEXPRESS_PORT=8080\nHUBOT_SLACK_TOKEN=${slackToken}" | clever env import --alias "${displayName}"; `
       , `clever domain add ${domain}.cleverapps.io --alias "${displayName}"; `
       , `clever scale --flavor S --alias "${displayName}"; `
     ].join('');

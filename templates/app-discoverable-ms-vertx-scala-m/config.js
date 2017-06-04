@@ -32,11 +32,12 @@ module.exports = {
         `./templates/${template}/newscalamsvertx.sh ${application} ${object_name}; `
       , `cd ${application}; `
       , `clever create -t sbt "${displayName}" --org ${organization} --region ${region} --alias "${displayName}"; `
-      , `clever env set SERVICE_PORT 80 --alias "${displayName}"; `
-      , `clever env set SERVICE_ID ${microservice_id} --alias "${displayName}"; `
-      , `clever env set SERVICE_HOST ${domain}.cleverapps.io --alias "${displayName}"; `
-      , `clever env set SERVICE_ROOT "/api" --alias "${displayName}"; `
-      , `clever env set PORT 8080 --alias "${displayName}"; `
+      , `echo "SERVICE_PORT=80\nSERVICE_ID=${microservice_id}\nSERVICE_HOST=${domain}.cleverapps.io\nSERVICE_ROOT=/api\nPORT=8080" | clever env import --alias "${displayName}"; `
+      //, `clever env set SERVICE_PORT 80`
+      //, `clever env set SERVICE_ID ${microservice_id} --alias "${displayName}"; `
+      //, `clever env set SERVICE_HOST ${domain}.cleverapps.io --alias "${displayName}"; `
+      //, `clever env set SERVICE_ROOT "/api" --alias "${displayName}"; `
+      //, `clever env set PORT 8080 --alias "${displayName}"; `
       , `clever domain add ${domain}.cleverapps.io --alias "${displayName}"; `
       , `clever scale --flavor M --alias "${displayName}"; `
       , `clever service link-addon ${redis_addon_name} --alias "${displayName}"; `

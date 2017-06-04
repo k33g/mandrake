@@ -1,5 +1,6 @@
 const monet = require('monet')
 const getDirectories = require('./fsTools').getDirectories;
+const inquirer = require('inquirer')
 
 require('shelljs/global')
 
@@ -27,25 +28,31 @@ function getTemplateConfig({template}) {
 
 
 function getReadableTitlesList({templatesList}) {
-
   let titlesTemplatesList = []
   let templatesTable = []
 
-  templatesList.forEach( template => {
-    getTemplateConfig({template}).cata(
-      err => { 
-        // foo...
-      },
-      config => {
-        titlesTemplatesList.push(config.title)
-        templatesTable.push({title: config.title, template: template})
-      }
-    )
-  })
+  templatesList.forEach( template => { // template is the name of the directory of the template eg: app-bot-hubot-slack
+
+    if(template.startsWith("---[")) {
+      titlesTemplatesList.push(new inquirer.Separator(template))
+    } else {
+      getTemplateConfig({template}).cata(
+        err => { 
+          throw new Error("😡 Houston? We have a problem [getReadableTitlesList]")
+        },
+        config => {
+          titlesTemplatesList.push(config.title)
+          templatesTable.push({title: config.title, template: template})
+        }
+      )
+    }
+
+  }) // end for each
+  // should return something more functional...
   return {titlesTemplatesList, templatesTable} // return titles and a table of templates
 }
 
-function isItThefistTime() {
+function isItThefirstTime() {
   getDirectories({srcpath: './templates'}).cata(
     err => {
       console.log("🎩 There is no template in you project")
@@ -68,10 +75,19 @@ function isItThefistTime() {
 function buildTemplatesTitlesList() {
   return getDirectories({srcpath: './templates'}).cata(
     err => {
-      // foo
+      throw new Error("😡 Houston? We have a problem [buildTemplatesTitlesList]")
     },
     templatesList => {
-      return getReadableTitlesList({templatesList}).titlesTemplatesList
+      // prettify the list adding separator
+      let newTemplatesList = [].concat(
+          "---[ADDONS]---------"
+        , templatesList.filter(item => item.startsWith("addon-"))
+        , "---[APPLICATIONS]---"
+        , templatesList.filter(item => item.startsWith("app-"))
+        , "---[COMMANDS]-------"
+        , templatesList.filter(item => item.startsWith("cmd-"))
+      )
+      return getReadableTitlesList({templatesList: newTemplatesList}).titlesTemplatesList
     }
   )
 }
@@ -79,7 +95,7 @@ function buildTemplatesTitlesList() {
 function getTemplatesTable() {
   return getDirectories({srcpath: './templates'}).cata(
     err => {
-      // foo
+      throw new Error("😡 Houston? We have a problem [getTemplatesTable]")
     },
     templatesList => {
       return getReadableTitlesList({templatesList}).templatesTable
@@ -91,7 +107,7 @@ module.exports = {
     initializeTemplates
   , getTemplateConfig
   , getReadableTitlesList
-  , isItThefistTime
+  , isItThefirstTime
   , buildTemplatesTitlesList
   , getTemplatesTable
 }

@@ -1,6 +1,6 @@
 // very simple Vert-x web appplication to use a discoverable microservice written in Scala
 module.exports = {
-  title: "Java Vert.x web application - S",
+  title: "Java Vert.x web application - (Small)",
   cmd: function({
     template, application, displayName, domain, organization, region, promptsAnswers
   }) {

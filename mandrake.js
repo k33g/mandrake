@@ -8,7 +8,7 @@ const monet = require('monet')
 const level = require('level')
 
 const getTemplateConfig = require('./core/templates').getTemplateConfig;
-const isItThefistTime = require('./core/templates').isItThefistTime;
+const isItThefirstTime = require('./core/templates').isItThefirstTime;
 const buildTemplatesTitlesList = require('./core/templates').buildTemplatesTitlesList;
 const getTemplatesTable = require('./core/templates').getTemplatesTable;
 
@@ -19,7 +19,7 @@ const runCmd = require('./core/commands').runCmd;
 const logo = require('./core/logo');
 
 
-isItThefistTime()
+isItThefirstTime()
 
 /**
  * Level section
