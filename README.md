@@ -1,5 +1,7 @@
 # :tophat: Mandrake
 
+> **Currently this a mirror of my local work on other DVCS** | to update: `git push github master`
+
 Mandrake is an application generator for Clever-Cloud:
 
 - it helps you with providing walking skeletons of web applications or addon
