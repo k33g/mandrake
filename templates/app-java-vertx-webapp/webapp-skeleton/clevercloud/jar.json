@@ -1,0 +1,9 @@
+{
+  "build": {
+    "type": "maven",
+    "goal": "package"
+  },
+  "deploy": {
+    "jarName": "target/webapp-1.0-SNAPSHOT-fat.jar"
+  }
+}
