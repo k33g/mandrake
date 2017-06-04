@@ -30,9 +30,9 @@ isItThefistTime()
 
 let db = level('./mandrakedb')
 
-
 let templatesChoice = {
   type: 'list',
+  pageSize:15,
   name: 'templateTitle',
   message: 'What kind of application do yo want to generate?',
   choices: buildTemplatesTitlesList
@@ -190,6 +190,7 @@ inquirer.prompt([
                       db.put("app:"+res.application, res, (err) => {})
                       db.put("domain:"+res.domain, true, (err) => {})
                       db.put("displayName:"+res.displayName, true, (err) => {})
+                      console.log("👋 Remember, to deploy again: git push clever master")
                     }
                   )
                 }) // end of inquirer.prompt
@@ -202,6 +203,7 @@ inquirer.prompt([
                     db.put("app:"+res.application, res, (err) => {})
                     db.put("domain:"+res.domain, true, (err) => {})
                     db.put("displayName:"+res.displayName, true, (err) => {})
+                     console.log("👋 Remember, to deploy again: git push clever master")
                   }
                 )
               } // end of if
