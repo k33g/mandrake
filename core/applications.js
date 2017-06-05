@@ -41,26 +41,47 @@ function createBrandNewApp ({template, db, answers, promptsAnswers}) {
         let app_id = conf.app_id // Clever application Id
         console.log("🎩 Your Clever Application id is: ", app_id)
         console.log("🎩 Creating a git repository, then push to 💭 ☁️ ...")
+
+        //---------------------------------------
+        // extract environment variables
+        // useful to retrieve the uri of a database for example
+        let res = exec([
+            `cd ${answers.application}; `
+          , `clever env`
+        ].join(''))
+        
+        let raw_envvars = res.code === 0 ? res.stdout.split('\n') : null
+
+        let envvars = raw_envvars !== null  
+          ? raw_envvars.filter(item => (!item.startsWith("#")) && (!item == "")).map(item => {return {name:item.split("=")[0], value:item.split("=")[1]} })
+          : null
+
+        if(config.afterCreate) {
+          exec(config.afterCreate({
+              template: template
+            , application: answers.application
+            , displayName: answers.displayName
+            , domain: answers.domain
+            , organization: answers.organization
+            , region: answers.region
+            , promptsAnswers: promptsAnswers
+            , db: db
+            , mandrakeLocation: __dirname
+            , exec: exec
+            , envvars: envvars
+          }))
+        }
+
+        //---------------------------------------
         
         // perhaps to be splitted: creqte git repo, then push to Clever
         return createGitRepositoryAndPushToCleverCloud({app_id, answers}).cata(
           err => monet.Either.Left(err),
           res => {
             
-            if(config.afterpush) {
+            if(config.afterPush) {
 
-              let res = exec([
-                  `cd ${answers.application}; `
-                , `clever env`
-              ].join(''))
-              
-              let raw_envvars = res.code === 0 ? res.stdout.split('\n') : null
-
-              let envvars = raw_envvars !== null  
-                ? raw_envvars.filter(item => (!item.startsWith("#")) && (!item == "")).map(item => {return {name:item.split("=")[0], value:item.split("=")[1]} })
-                : null
-
-              exec(config.afterpush({
+              exec(config.afterPush({
                   template: template
                 , application: answers.application
                 , displayName: answers.displayName
@@ -74,7 +95,6 @@ function createBrandNewApp ({template, db, answers, promptsAnswers}) {
                 , envvars: envvars
               }))
             }
-            
             
             return monet.Either.Right(Object.assign({app_id, template}, answers))
           }
