@@ -1,0 +1,16 @@
+{
+  "name": "webapp",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "spirit": "^0.6.0",
+    "spirit-router": "^0.5.0"
+  }
+}
