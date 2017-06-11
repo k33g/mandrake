@@ -69,6 +69,7 @@ function createBrandNewApp ({template, db, answers, promptsAnswers}) {
             , mandrakeLocation: __dirname
             , exec: exec
             , envvars: envvars
+            , config: conf // content of `${process.cwd()}/${answers.application}/.clever.json`
           }))
         }
 
@@ -93,6 +94,7 @@ function createBrandNewApp ({template, db, answers, promptsAnswers}) {
                 , mandrakeLocation: __dirname
                 , exec: exec
                 , envvars: envvars
+                , config: conf // content of `${process.cwd()}/${answers.application}/.clever.json`
               }))
             }
             
