@@ -45,16 +45,76 @@ function createBrandNewApp ({template, db, answers, promptsAnswers}) {
         //---------------------------------------
         // extract environment variables
         // useful to retrieve the uri of a database for example
-        let res = exec([
-            `cd ${answers.application}; `
-          , `clever env`
-        ].join(''))
-        
-        let raw_envvars = res.code === 0 ? res.stdout.split('\n') : null
+        let getEnvVars = () => {
+          let res = exec([
+              `cd ${answers.application}; `
+            , `clever env`
+          ].join(''))
+          
+          let raw_envvars = res.code === 0 ? res.stdout.split('\n') : null
 
-        let envvars = raw_envvars !== null  
-          ? raw_envvars.filter(item => (!item.startsWith("#")) && (!item == "")).map(item => {return {name:item.split("=")[0], value:item.split("=")[1]} })
-          : null
+          let envvars = raw_envvars !== null  
+            ? raw_envvars.filter(item => (!item.startsWith("#")) && (!item == "")).map(item => {return {name:item.split("=")[0], value:item.split("=")[1]} })
+            : null
+          return envvars
+        }
+
+        //---------------------------------------
+        // extract services (linked applications and addons)
+        // useful to retrieve the uri of an fs-bucket for example
+        let getServices = () => {
+          let res = exec([
+              `cd ${answers.application}; `
+            , `clever service`
+          ].join(''))
+          
+          let raw_services = res.code === 0 ? res.stdout.split('\n').filter(line => line.length > 0) : null
+
+          let addons = raw_services !== null  
+            ? raw_services.filter(item => raw_services.indexOf(item) > raw_services.indexOf("Addons:"))
+              .map(item => {
+                return {
+                  name: item.trim().split(" ")[0],
+                  id: item.trim().split("(")[1].split(")")[0]
+                }
+              })
+            : null
+
+          let applications = raw_services !== null  
+            ? raw_services.filter(item => raw_services.indexOf(item) < raw_services.indexOf("Addons:") && raw_services.indexOf(item) > raw_services.indexOf("Applications:"))
+              .map(item => {
+                return {
+                  name: item.trim().split(" ")[0],
+                  id: item.trim().split("(")[1].split(")")[0]
+                }
+              })
+            : null
+
+
+          /*
+            services.filter(item => services.indexOf(item) > services.indexOf("Addons:"))
+              .map(item => {
+                return {
+                  name: item.trim().split(" ")[0],
+                  id: item.trim().split("(")[1].split(")")[0]
+                }
+              })
+            services.filter(item => services.indexOf(item) < services.indexOf("Addons:") && services.indexOf(item) > services.indexOf("Applications:") )
+              .map(item => {
+                return {
+                  name: item.trim().split(" ")[0],
+                  id: item.trim().split("(")[1].split(")")[0]
+                }
+              })
+          */
+
+          return {addons, applications}
+
+        }
+
+        let envvars = getEnvVars();
+        let services = getServices();
+        
 
         if(config.afterCreate) {
           exec(config.afterCreate({
@@ -69,6 +129,7 @@ function createBrandNewApp ({template, db, answers, promptsAnswers}) {
             , mandrakeLocation: __dirname
             , exec: exec
             , envvars: envvars
+            , services: services
             , config: conf // content of `${process.cwd()}/${answers.application}/.clever.json`
           }))
         }
@@ -94,6 +155,7 @@ function createBrandNewApp ({template, db, answers, promptsAnswers}) {
                 , mandrakeLocation: __dirname
                 , exec: exec
                 , envvars: envvars
+                , services: services
                 , config: conf // content of `${process.cwd()}/${answers.application}/.clever.json`
               }))
             }
